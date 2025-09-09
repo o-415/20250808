@@ -22,7 +22,7 @@ export default function TileInput({ tiles, selectedTiles, setSelectedTiles,  hel
   };
 
   return (
-    <div className="container">
+    <div >
       <h2 className="title">牌一覧（タップで選択）</h2>
       <div className="tiles-list">
         {tiles.map((tile) => (
@@ -131,7 +131,7 @@ export default function TileInput({ tiles, selectedTiles, setSelectedTiles,  hel
       </div>
       <p className="label"> 単騎：頭待ち </p>
       <p className="label"> 嵌張：順子の間待ち（ ex [7・8・9] の 8 待ち） </p>
-      <p className="label"> 辺張：[1・2・3] の 1 待ち or [7・8・9] の 9 待ち </p>
+      <p className="label"> 辺張：[1・2・3] の 3  or [7・8・9] の 7 待ち </p>
       </>
 
     </div>

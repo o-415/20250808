@@ -16,7 +16,6 @@ export function convertTiles(selectedTiles) {
     }
   });
 
-  console.log("手牌:",shoupai);
   return shoupai;
 }
 
@@ -75,6 +74,9 @@ export function checkJiulian(shoupai,isMenqian) {
   
   const suit = suits[0];
   const bingpai = shoupai[suit];
+
+  const total = bingpai.reduce((a,b) => a+b, 0);
+  if (total !== 14) return [];
 
   if (shoupai.z.some(n => n > 0)) return [];
   if (bingpai[1] < 3 || bingpai[9] < 3) return [];
@@ -136,32 +138,30 @@ function mianzi(suit, bingpai, n) {
 
 //mianzi()を使って手牌の面子を探す関数
 function mianzi_all(shoupai) {
-
-    var all_mianzi = [[]];
-
+  var all_mianzi = [[]];
     
-    /* 萬子、筒子、索子の副露していない牌から面子を探す */
-    for (var suit of ['m','p','s']) {
-        const bingpai = shoupai[suit];
-        var new_mianzi = [];
-        var sub_mianzi = mianzi(suit, bingpai, 1);
-        for (var mm of all_mianzi) {
-            for (var nn of sub_mianzi) {
-                new_mianzi.push(mm.concat(nn));
-            }
-        }
-        all_mianzi = new_mianzi;
+  /* 萬子、筒子、索子の副露していない牌から面子を探す */
+  for (var suit of ['m','p','s']) {
+    const bingpai = shoupai[suit];
+    var new_mianzi = [];
+    var sub_mianzi = mianzi(suit, bingpai, 1);
+    for (var mm of all_mianzi) {
+      for (var nn of sub_mianzi) {
+        new_mianzi.push(mm.concat(nn));
+      }
     }
+    all_mianzi = new_mianzi;
+  }
 
-    /* 字牌の面子は刻子しかあり得ないので自前で処理する */
-    var sub_mianzi_z = [];
-    for (var n = 1; n <= 7; n++) {
-        if (shoupai.z[n] == 0) continue;
-        if (shoupai.z[n] === 3) {
+  /* 字牌の面子は刻子しかあり得ないので自前で処理する */
+  var sub_mianzi_z = [];
+  for (var n = 1; n <= 7; n++) {
+    if (shoupai.z[n] == 0) continue;
+      if (shoupai.z[n] === 3) {
          sub_mianzi_z.push('z'+n+n+n);
-        } else if (shoupai.z[n] === 4) {
-         sub_mianzi_z.push('z'+n+n+n+n);
-        }
+      } else if (shoupai.z[n] === 4) {
+        sub_mianzi_z.push('z'+n+n+n+n);
+      }
     }
     all_mianzi = all_mianzi.map(pattern => pattern.concat(sub_mianzi_z));
 
@@ -169,44 +169,49 @@ function mianzi_all(shoupai) {
 }
 
 export function hele_mianzi(shoupai, fuluSets) {
+  console.log("手牌:",shoupai);  
+  var hele_mianzi = [];
+  const fulu = fuluSets.map(f => {
+    const suit = f.tiles[0].slice(1); 
+    const numbers = f.tiles.map(t => t[0]).join('');
+    return suit + numbers;
+  });
 
-    var hele_mianzi = [];
-    const fulu = fuluSets.map(f => {
-      const suit = f.tiles[0].slice(1); 
-      const numbers = f.tiles.map(t => t[0]).join('');
-      return suit + numbers;
+  const shoupaiWithoutFulu = structuredClone(shoupai);
+  fulu.forEach(set => {
+     const suit = set[0];          
+     const numbers = set.slice(1); 
+
+    numbers.split('').forEach(num => {
+      const n = parseInt(num, 10);
+      if (shoupaiWithoutFulu[suit][n] > 0) {
+        shoupaiWithoutFulu[suit][n]--;
+      }
     });
+  });
 
-    const shoupaiWithoutFulu = structuredClone(shoupai);
-    fulu.forEach(set => {
-      const suit = set[0];          
-      const numbers = set.slice(1); 
-
-      numbers.split('').forEach(num => {
-        const n = parseInt(num, 10);
-        if (shoupaiWithoutFulu[suit][n] > 0) {
-          shoupaiWithoutFulu[suit][n]--;
+  for (const suit in shoupaiWithoutFulu) {
+    const copy = structuredClone(shoupaiWithoutFulu);
+    const bingpai = copy[suit];
+    for (var n = 1; n < bingpai.length; n++) {
+      if (bingpai[n] < 2) continue;
+      copy[suit][n] -= 2;
+      var jiangpai = suit+n+n;
+      for (var mm of mianzi_all(copy)) {
+        mm.unshift(jiangpai);
+        if (mm.concat(fulu).length === 5) {
+          const candidate = mm.concat(fulu);
+          const pattern = candidate.slice().sort();
+          const key = JSON.stringify(pattern);
+          if (!hele_mianzi.some(x => JSON.stringify(x.slice().sort()) === key)) {
+            hele_mianzi.push(candidate);
+          }
         }
-      });
-    });
-
-
-    for (const suit in shoupaiWithoutFulu) {
-        const copy = structuredClone(shoupaiWithoutFulu);
-        const bingpai = copy[suit];
-        for (var n = 1; n < bingpai.length; n++) {
-            if (bingpai[n] < 2) continue;
-             copy[suit][n] -= 2;
-            var jiangpai = suit+n+n;
-            for (var mm of mianzi_all(copy)) {
-                mm.unshift(jiangpai);
-                if (mm.concat(fulu).length === 5) {
-                  hele_mianzi.push(mm.concat(fulu));
-                }
-            }
-            bingpai[n] += 2;
-        }
+      }
+      bingpai[n] += 2;
     }
+  }
 
-    return hele_mianzi;
+  console.log("面子：",hele_mianzi);
+  return hele_mianzi;
 }

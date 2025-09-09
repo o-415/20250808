@@ -1,5 +1,36 @@
-export function isDapaixing(isTianhe,guoshi,jiulian,anKezi,isTingpaiType,isMenqian,heleType,mianzi,qiduizi,kezi){
+export function isDapaixing(isTianhe,guoshi,jiulian,anKezi,isTingpaiType,isMenqian,heleType,mianzi,qiduizi,kezi,heleTile){
     var dapaixing = [];
+
+    //国士無双
+    if (guoshi?.length > 0) {
+        const head = guoshi[0][0]
+        if(heleTile===(head[1] + head[0])){
+             dapaixing.push({ name: "国士無双13面待ち", fanshu: "**" });
+        } else {
+            dapaixing.push({ name: "国士無双", fanshu: "*" });
+        }
+    }
+
+    //九連宝燈
+    if (jiulian?.length > 0) {
+        const numbersOnly = jiulian.flat().map(x => x.slice(1));
+        const counts = {};
+        numbersOnly.forEach(n => {
+         if (n !== '1' && n !== '9') {
+          counts[n] = (counts[n] || 0) + 1;
+         }
+        });
+        const duplicates = Object.keys(counts).filter(n => counts[n] >= 2);
+        if(numbersOnly.filter(n => n === '1').length === 4 && heleTile[0] === '1'){
+            dapaixing.push({ name: "純正九連宝燈", fanshu: "**" });
+        }else if (numbersOnly.filter(n => n === '9').length === 4 && heleTile[0] === '9'){
+            dapaixing.push({ name: "純正九連宝燈", fanshu: "**" });
+        }else if (duplicates[0]===heleTile[0]){
+            dapaixing.push({ name: "純正九連宝燈", fanshu: "**" });
+        }else{
+            dapaixing.push({ name: "九連宝燈", fanshu: "*" });
+        }
+    }   
 
     if (isTianhe === 1) {
         dapaixing.push({ name: "天和", fanshu: "*" });
@@ -7,33 +38,13 @@ export function isDapaixing(isTianhe,guoshi,jiulian,anKezi,isTingpaiType,isMenqi
         dapaixing.push({ name: "地和", fanshu: "*" });
     }
 
-    if (guoshi?.length > 0) {
-        dapaixing.push({ name: "国士無双", fanshu: "*" });
-    }
-
-    if (jiulian?.length > 0) {
-        dapaixing.push({ name: "九連宝燈", fanshu: "*" });
-    }
- 
-    const a = anKezi[0];
-    if ((a.ankezi + a.ankeziYaojiu + a.angangzi + a.angangziYaojiu) === 4 && isTingpaiType === 2) {
-        dapaixing.push({ name: "四暗刻単騎", fanshu: "**" });
-    }
-
-    if (
-        (a.ankezi + a.ankeziYaojiu + a.angangzi + a.angangziYaojiu) === 4 &&
-        isTingpaiType !== 2 &&
-        heleType === "ツモ" &&
-        isMenqian === true
-    ) {
-        dapaixing.push({ name: "四暗刻", fanshu: "*" });
-    }
-
-    const k = kezi[0];
-    if ((k.gangzi + k.gangziYaojiu) === 4) {
-        dapaixing.push({ name: "四槓子", fanshu: "*" });
+    for (const k of kezi){
+        if ((k.gangzi + k.gangziYaojiu) === 4) {
+         dapaixing.push({ name: "四槓子", fanshu: "*" });
+        }
     }
     
+    dapaixing.push(...sianke (anKezi,mianzi,heleType,isMenqian,isTingpaiType,heleTile));
     dapaixing.push(...dasanyuan(mianzi));
     dapaixing.push(...luyise(mianzi));
     dapaixing.push(...ziyise(mianzi,qiduizi));
@@ -47,10 +58,31 @@ export function isDapaixing(isTianhe,guoshi,jiulian,anKezi,isTingpaiType,isMenqi
     return dapaixing;
 }
 
-//大三元
-function dasanyuan (mianzi){
+//四暗刻
+function sianke (anKezi,mianzi,heleType,isMenqian,isTingpaiType,heleTile){
     if (!mianzi || mianzi.length === 0) return [];
-    
+    if (!anKezi || anKezi.length === 0) return [];
+    if (!isMenqian) return [];
+    if (!heleTile && typeof isTingpaiType !== 'number') return [];
+
+    for (let i = 0; i < anKezi.length; i++) {
+        const a = anKezi[i];
+        if((a.ankezi + a.ankeziYaojiu + a.angangzi + a.angangziYaojiu) !== 4 ) continue;
+
+        if(mianzi[0][0].slice(0, 2) === heleTile[1]+heleTile[0]){
+            return [{ name: "四暗刻単騎", fanshu: "**" }];
+        }
+
+        if(isTingpaiType !== 2 && heleType === "ツモ"){
+            return [{ name: "四暗刻", fanshu: "*" }];
+        }
+    }
+    return [];
+}
+
+//大三元
+function dasanyuan (mianzi){    
+    if (!mianzi || mianzi.length === 0) return [];
     const targets = ["z555", "z666", "z777"];
     const melds = Object.values(mianzi[0]);
     const allFound = targets.every(t => 
@@ -80,7 +112,7 @@ function luyise (mianzi){
        // 發以外の字牌があれば NG
        if (suit === "z") {
         for (const n of nums) {
-         if (n !== "5") return [];
+         if (n !== "6") return [];
         }
        }
 
@@ -103,7 +135,7 @@ function ziyise (mianzi,qiduizi){
      for (const pair of pairs) {
       if (!pair.startsWith("z")) return [];
      }
-     return [{ name: "字一色", fanshu: ["*"] }];
+     return [{ name: "字一色", fanshu: "*" }];
     }
 
     if (!mianzi || mianzi.length === 0) return [];
@@ -119,14 +151,15 @@ function ziyise (mianzi,qiduizi){
 }
 
 //清老頭
-function qinglaotou (mianzi,kezi){
+function qinglaotou (mianzi,kezi){  
     if (!mianzi || mianzi.length === 0) return [];
-
-    const k = kezi[0];
-    if ((k.keziYaojiu + k.gangziYaojiu) !== 4) return [];
-
+    for (const k of kezi){
+        if ((k.keziYaojiu + k.gangziYaojiu) !== 4) return [];
+    }
+    
     const head = Array.isArray(mianzi[0]) ? mianzi[0][0] : mianzi[0];
     const headNum = head.slice(1);
+    console.log(head,headNum);
     if (!(headNum.includes("1") || headNum.includes("9"))) return [];
 
     for (const pattern of mianzi) { 
@@ -141,9 +174,8 @@ function qinglaotou (mianzi,kezi){
 }
 
 //大四喜
-function dasixi (mianzi){
+function dasixi (mianzi){    
     if (!mianzi || mianzi.length === 0) return [];
-    
     const targets = ["z111", "z222", "z333", "z444"];
     const melds = Object.values(mianzi[0]);
     const allFound = targets.every(t => 
@@ -158,6 +190,7 @@ function dasixi (mianzi){
 
 //小四喜
 function xiaosixi (mianzi){
+    if (!mianzi || mianzi.length === 0) return [];
     let count = 0;
     for (const meld of mianzi) {
         for (const tile of meld) {

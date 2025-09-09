@@ -1,7 +1,7 @@
 import React from "react";
 import './common.css'; 
 
-export default function VariousCheck({isTianhe, setIsTianhe, isHaidi, setIsHaidi, isLingshang, setIsLingShang, isQianggang, setIsQianggang}) {
+export default function VariousCheck({menfeng, isTianhe, setIsTianhe, isHaidi, setIsHaidi, isLingshang, setIsLingShang, isQianggang, setIsQianggang}) {
 
     //役クリア
     const handleClear = () => {
@@ -12,7 +12,7 @@ export default function VariousCheck({isTianhe, setIsTianhe, isHaidi, setIsHaidi
     };
 
     return(
-       <div className="container">
+       <div >
         <>
         <h2 className="title">当てはまる役を選択</h2>
         <button onClick={handleClear} className="clear-button">
@@ -24,12 +24,14 @@ export default function VariousCheck({isTianhe, setIsTianhe, isHaidi, setIsHaidi
             className={`button ${isTianhe === 1 ? "selected" : ""}`}
             onClick={() => setIsTianhe(1)}
             type="button"
+            disabled={menfeng !== "1z"} // 親以外は選択できない
             >天和
             </button>
             <button
             className={`button ${isTianhe === 2 ? "selected" : ""}`}
             onClick={() => setIsTianhe(2)}
             type="button"
+            disabled={menfeng === "1z"} // 親は選択できない
             >地和
             </button>
         </div>
@@ -65,10 +67,10 @@ export default function VariousCheck({isTianhe, setIsTianhe, isHaidi, setIsHaidi
         </div>
         <p className="label"> 天和：配牌の時点でアガリ（親のみ） </p>
         <p className="label"> 地和：第一ツモでアガリ（子のみ） </p>
-        <p className="label"> 海底摸月：その局の最後の1枚でアガリ（ツモ） </p>
-        <p className="label"> 河底撈魚：その局の最後の捨て牌でアガリ（ロン） </p>
+        <p className="label"> 海底摸月：局の最後の1枚でアガリ（ツモ） </p>
+        <p className="label"> 河底撈魚：局の最後の捨て牌でアガリ（ロン） </p>
         <p className="label"> 嶺上開花：嶺上牌（カンしてもらう牌）でアガリ </p>
-        <p className="label"> 槍槓：加槓（ポンに追加するカン）した牌でロン </p>
+        <p className="label"> 槍槓：<br />加槓（ポンに追加するカン）した捨て牌でロン </p>
         </>
        </div> 
     );

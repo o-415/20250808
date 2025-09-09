@@ -4,14 +4,14 @@ import TileInput from "./components/TileInput";
 import FuluCheck from "./components/FuluCheck";
 import LizhiCheck from "./components/LizhiCheck";
 import VariousCheck from "./components/VariousCheck";
-import OtherCheck from "./components/OtherCheck";
+import DoraCheck from "./components/DoraCheck.jsx";
 import Result from "./components/Result";
 import { convertTiles } from "./js/mianzi.js";
 import { checkQiduizi } from "./js/mianzi.js";
 import { checkGuoshi } from "./js/mianzi.js";
 import { checkJiulian } from "./js/mianzi.js";
 import { hele_mianzi } from "./js/mianzi.js";
-import { fuAllCalc } from "./js/fu.js"
+import { fuCalc } from "./js/fu.js"
 import { keziCount } from "./js/fu.js"
 import { anKeziCount } from "./js/fu.js"
 import { Isquetou } from "./js/fu.js";
@@ -43,7 +43,6 @@ export default function App() {
   const [isLingshang, setIsLingShang] = useState(false);
   const [isQianggang, setIsQianggang] = useState(false);
   const [dora, setDora] = useState(0);
-  const [isZhuangjia, setIszhuangjia] = useState(null);
 
   const shoupai = convertTiles(selectedTiles);
   const qiduizi = checkQiduizi(shoupai);
@@ -51,21 +50,20 @@ export default function App() {
   const jiulian = checkJiulian(shoupai,isMenqian);
   const mianzi = hele_mianzi(shoupai, fuluSets);
   const kezi = keziCount(mianzi)
-  const anKezi = anKeziCount(fuluSets, mianzi);
+  const anKezi = anKeziCount(fuluSets,mianzi,heleType,heleTile,isTingpaiType,kezi);
   const quetou = Isquetou(mianzi,menfeng,zhuangfeng);
-  const fu = fuAllCalc(
-    fuluSets, mianzi, heleType, isMenqian, isTingpaiType, menfeng, zhuangfeng
+  const fu = fuCalc(
+    fuluSets,mianzi,heleType,isMenqian,isTingpaiType,menfeng,zhuangfeng,heleTile,anKezi
   );
   const dapaixing = isDapaixing(
-    isTianhe, guoshi, jiulian, anKezi, isTingpaiType, isMenqian, heleType, 
-    mianzi, qiduizi, kezi
+    isTianhe,guoshi,jiulian,anKezi,isTingpaiType,isMenqian,heleType,mianzi,qiduizi,kezi,heleTile
   );
   const hupai = get_hupai(
     mianzi, isLizhi, isYifa, isHaidi, isLingshang, isQianggang, 
     dora, isMenqian, heleType, isTingpaiType, kezi, quetou, zhuangfeng, 
     menfeng, qiduizi, anKezi, heleTile
   );
-  const result = get_score(dapaixing,hupai,fu,isZhuangjia,heleType,isMenqian);
+  const result = get_score(dapaixing,hupai,fu,menfeng,heleType,isMenqian);
   const payment = getPayment(result);
 
   return (
@@ -92,14 +90,11 @@ export default function App() {
       />
       
       <FuluCheck
-        tiles={tiles}
         isMenqian={isMenqian}
         setIsMenqian={setIsMenqian}
         selectedTiles={selectedTiles}
         fuluSets={fuluSets}
         setFuluSets={setFuluSets}
-        isReach={isLizhi}
-        setIsReach={setIsLizhi}
       />
 
       <LizhiCheck
@@ -111,6 +106,7 @@ export default function App() {
       />
 
       <VariousCheck
+        menfeng={menfeng}
         isHaidi={isHaidi}
         setIsHaidi={setIsHaidi}
         isTianhe={isTianhe}
@@ -121,11 +117,9 @@ export default function App() {
         setIsQianggang={setIsQianggang}
       />
 
-      <OtherCheck
+      <DoraCheck
         dora={dora}
         setDora={setDora}
-        isZhuangjia={isZhuangjia}
-        setIszhuangjia={setIszhuangjia}
       />
 
       <Result
@@ -134,7 +128,7 @@ export default function App() {
         dapaixing={dapaixing}
         result={result}
         payment={payment}
-        isZhuangjia={isZhuangjia}
+        menfeng={menfeng}
       />
     </div>
   );

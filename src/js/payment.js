@@ -19,13 +19,12 @@ const payments = {
     7900 : { zhuangjia:3900, zijia:2000 },
     8000 : { zhuangjia:4000, zijia:2000 },
     12000: { zhuangjia:6000, zijia:3000 },
-    18000: { zhuangjia:8000, zijia:4000 },
+    16000: { zhuangjia:8000, zijia:4000 },
     24000: { zhuangjia:12000, zijia:6000 },
     32000: { zhuangjia:16000, zijia:8000 },
     64000: { zhuangjia:32000, zijia:16000 }
 }
 
 export function getPayment(result) {
-  console.log(result.hupai)
   return payments[result.score] || null;
 }

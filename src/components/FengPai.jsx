@@ -15,7 +15,7 @@ export default function FengPai({
   setMenfeng,
 }) {
   return (
-    <div className="container">
+    <div>
       <h2 className="title">場風と自風を選択</h2>
 
       <div>

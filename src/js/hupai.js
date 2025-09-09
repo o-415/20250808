@@ -3,36 +3,38 @@ export function get_hupai(
     dora,isMenqian,heleType,isTingpaiType,kezi,quetou,zhuangfeng,
     menfeng,qiduizi,anKezi,heleTile
 ){
-    if (qiduizi && qiduizi.length > 0){
+    //七対子パターン
+    if ((!mianzi || mianzi.length === 0) && qiduizi && qiduizi.length > 0){
         return [{ 
-            pattern: mianzi[0], 
+            pattern: qiduizi, 
             yaku: hupai(
                 mianzi[0], isLizhi, isYifa, isHaidi, isLingshang, isQianggang, 
-                dora, isMenqian, heleType, isTingpaiType, kezi, quetou, zhuangfeng, 
-                menfeng, qiduizi, anKezi, heleTile 
+                dora, isMenqian, heleType, isTingpaiType, kezi[0], quetou, zhuangfeng, 
+                menfeng, qiduizi, anKezi[0], heleTile 
             ) 
         }]; 
     }
-    if (!mianzi || mianzi.length === 0) return []; 
+    if (!mianzi || mianzi.length === 0) return [];  
+
     if (mianzi.length > 1) { 
         const allResults = []; 
-        for (const pattern of mianzi) { 
+        for (let i = 0; i < mianzi.length; i++) { 
+            const pattern = mianzi[i];
             const yaku = hupai(
                 pattern, isLizhi, isYifa, isHaidi, isLingshang, isQianggang, 
-                dora, isMenqian, heleType, isTingpaiType, kezi, quetou, zhuangfeng, 
-                menfeng, qiduizi, anKezi, heleTile 
+                dora, isMenqian, heleType, isTingpaiType, kezi[i], quetou, zhuangfeng, 
+                menfeng, qiduizi, anKezi[i]
             ); 
             allResults.push({ pattern, yaku }); 
         } 
-        console.log(allResults);
         return allResults; 
     } else { 
         return [{ 
             pattern: mianzi[0], 
             yaku: hupai(
                 mianzi[0], isLizhi, isYifa, isHaidi, isLingshang, isQianggang, 
-                dora, isMenqian, heleType, isTingpaiType, kezi, quetou, zhuangfeng, 
-                menfeng, qiduizi, anKezi, heleTile 
+                dora, isMenqian, heleType, isTingpaiType, kezi[0], quetou, zhuangfeng, 
+                menfeng, qiduizi, anKezi[0]
             ) 
         }]; 
     }
@@ -41,9 +43,8 @@ export function get_hupai(
 function hupai(
     mianzi,isLizhi,isYifa,isHaidi,isLingshang,isQianggang,
     dora,isMenqian,heleType,isTingpaiType,kezi,quetou,zhuangfeng,
-    menfeng,qiduizi,anKezi,heleTile
+    menfeng,qiduizi,anKezi
 ){
-    console.log(mianzi);
     
     var hupai = [];
 
@@ -84,7 +85,7 @@ function hupai(
     hupai.push(...duiduihu(kezi));
     hupai.push(...xiaosanyuan (mianzi));
     hupai.push(...sangangzi(kezi));
-    hupai.push(...sananko(anKezi,heleType,mianzi,heleTile));
+    hupai.push(...sananko(anKezi));
     hupai.push(...erbeikou(isMenqian,mianzi));
 
     if (!hupai.some(h => h.name === "二盃口")){
@@ -113,8 +114,7 @@ function hupai(
 //平和
 function pinghe (isMenqian,isTingpaiType,kezi,quetou){
     if(isMenqian && isTingpaiType === 1 && quetou === false){
-        const k =kezi[0];
-        if((k.kezi + k.keziYaojiu + k.gangzi + k.gangziYaojiu) === 0){
+        if((kezi.kezi + kezi.keziYaojiu + kezi.gangzi + kezi.gangziYaojiu) === 0){
             return [{ name: "平和", fanshu: 1 }];
         }
     }
@@ -163,15 +163,13 @@ function duanyaojiu(mianzi,qiduizi){
     }
 
     if (!mianzi || mianzi.length === 0) return [];
-    for (const pattern of mianzi) {
-        for (const meld of pattern){
-            const meldStr = Array.isArray(meld) ? meld[0] : meld; 
+    for (const pattern of mianzi) {        
+            const meldStr = Array.isArray(pattern) ? pattern[0] : pattern; 
             const suit = meldStr[0];
             const nums =  meldStr.slice(1).split('');
 
             if(suit === "z") return [];
             if(nums.some(n => n === "1" || n === "9")) return [];  
-        }
     }
 
     return [{ name: "断幺九", fanshu: 1 }];
@@ -220,7 +218,7 @@ function sansetongshun(mianzi,isMenqian){
     for (const suits of Object.values(sequences)) {
      if (suits.size === 3) {
       if(isMenqian) return [{ name: "三色同順", fanshu: 2 }];
-      if(!isMenqian) return [{ name: "三色同順", fanshu: 1 }];
+      if(!isMenqian) return [{ name: "三色同順（喰い下がり）", fanshu: 1 }];
      }
     }
 
@@ -236,11 +234,12 @@ function sansetongke(mianzi){
      const suit = meldStr[0];
      const nums = meldStr.slice(1);
 
-     if (nums.length !== 3) continue;
-     if (nums[0] !== nums[1] || nums[1] !== nums[2]) continue;
+     if (nums.length === 2 ) continue;
+     if (!nums.split("").every(n => n === nums[0])) continue;
 
-     triples[nums] = triples[nums] || new Set();
-     triples[nums].add(suit);
+     const num = nums[0];
+     triples[num] = triples[num] || new Set();
+     triples[num].add(suit);
     }
 
     for (const suits of Object.values(triples)) {
@@ -275,7 +274,10 @@ function yiqitongguan(mianzi,isMenqian){
     for (const suit of ["m", "p", "s"]) {
      const numsSet = suitsNums[suit];
      if ([1,2,3,4,5,6,7,8,9].every(n => numsSet.has(n))) {
-      return [{ name: "一気通貫", fanshu: isMenqian ? 2 : 1 }];
+      return [{
+        name: isMenqian ? "一気通貫" : "一気通貫（喰い下がり）",
+        fanshu: isMenqian ? 2 : 1
+      }];
      }
     }
 
@@ -285,8 +287,7 @@ function yiqitongguan(mianzi,isMenqian){
 //対々和
 function duiduihu(kezi){
     if (!kezi || kezi.length === 0) return [];
-    const k =kezi[0];
-    if((k.kezi + k.keziYaojiu + k.gangzi + k.gangziYaojiu) === 4){
+    if((kezi.kezi + kezi.keziYaojiu + kezi.gangzi + kezi.gangziYaojiu) === 4){
         return [{ name: "対々和", fanshu: 2 }];
     }
     return [];
@@ -297,12 +298,10 @@ function xiaosanyuan(mianzi){
     if (!mianzi || mianzi.length === 0) return [];
     let count = 0;
     for (const meld of mianzi) {
-        for (const tile of meld) {
-            if (tile[0] === "z") {
-                const num = tile.slice(1);   
-                if (num.includes('5') || num.includes('6') || num.includes('7')) {
-                    count += 1;
-                }
+        if (meld[0] === "z") {
+            const num = meld.slice(1);   
+            if (num.includes('5') || num.includes('6') || num.includes('7')) {
+                count += 1;
             }
         }
     }
@@ -315,47 +314,18 @@ function xiaosanyuan(mianzi){
 //三槓子
 function sangangzi(kezi){
     if (!kezi || kezi.length === 0) return [];
-    const k =kezi[0];
-    if((k.gangzi + k.gangziYaojiu) === 3){
+    if((kezi.gangzi + kezi.gangziYaojiu) === 3){
         return [{ name: "三槓子", fanshu: 2 }];
     }
     return [];
 }
 
 //三暗刻
-function sananko(anKezi,heleType,mianzi,heleTile){
+function sananko(anKezi){
     if (!anKezi || anKezi.length === 0) return [];
-    if (!heleTile || heleTile.length === 0) return[];
-
-    console.log("アガリ牌：",heleTile);
-    const a = anKezi[0];
-    const ankoCount = a.ankezi + a.ankeziYaojiu + a.angangzi + a.angangziYaojiu;
-    if (ankoCount === 3 && heleType === "ツモ") {
+    if ((anKezi.ankezi + anKezi.ankeziYaojiu + anKezi.angangzi + anKezi.angangziYaojiu) === 3 ) {
         return [{ name: "三暗刻", fanshu: 2 }];
     }
-
-    if(heleType === "ロン"){
-        if (ankoCount === 4) return [{ name: "三暗刻", fanshu: 2 }];
-
-        if(ankoCount === 3){
-            const koutsuList = [];
-            for (const meld of mianzi) {
-                const suit = meld[0]; 
-                const nums = meld.slice(1); 
-                if ((nums.length === 3 && nums[0] === nums[1] && nums[1] === nums[2]) ||
-                    (nums.length === 4 && nums[0] === nums[1] && nums[1] === nums[2] && nums[2] === nums[3])) 
-                {
-                    const tiles = nums.split("").map(n => suit + n);
-                    koutsuList.push(tiles);
-                    if( koutsuList.some(k => k.includes( heleTile[1] + heleTile[0]))){
-                        return [];
-                    }
-                }
-            }
-            return [{ name: "三暗刻", fanshu: 2 }];
-        }
-    }
-
     return [];
 }
 
@@ -374,8 +344,7 @@ function hunlaotou(mianzi,kezi,qiduizi){
     }
 
     if (!mianzi || mianzi.length === 0) return [];
-    const k = kezi[0];
-    if ((k.keziYaojiu + k.gangziYaojiu) !== 4) return [];
+    if ((kezi.keziYaojiu + kezi.gangziYaojiu) !== 4) return [];
 
     for (const pattern of mianzi) { 
         for (const meld of pattern) {
@@ -403,13 +372,20 @@ function quandai(mianzi,isMenqian){
      const suit = meldStr[0];
      const nums = meldStr.slice(1);
 
-     if (suit === 'z') hasZipai = true;
-     const hasYaojiu = hasZipai || nums.split('').some(n => n === '1' || n === '9');
-     if (!hasYaojiu) return [];
+        if (suit === 'z') {
+         hasZipai = true;
+        } else {
+         if (!nums.split('').some(n => n === '1' || n === '9')) {
+          return [];
+         }
+        }
     }
   
     if (!hasZipai) return [];
-    return [{ name: "混全帯幺九", fanshu: isMenqian ? 2 : 1 }];
+    return [{ 
+        name: isMenqian ? "混全帯幺九": "混全帯幺九（喰い下がり）",
+        fanshu: isMenqian ? 2 : 1 
+    }];
 }
 
 //純全帯公九
@@ -427,7 +403,10 @@ function chunquan(mianzi,isMenqian){
      if (!hasYaojiu) return [];
     }
 
-    return [{ name: "純全帯公九", fanshu: isMenqian ? 3 : 2 }];
+    return [{ 
+        name: isMenqian ? "純全帯公九":"純全帯公九（喰い下がり）", 
+        fanshu: isMenqian ? 3 : 2 
+    }];
 }
 
 //混一色・清一色
@@ -446,9 +425,15 @@ function hunyise(mianzi,isMenqian,qiduizi){
             }
         }
         if (hasZipai) {
-         return [{ name: "混一色", fanshu: isMenqian ? 3 : 2 }];
+         return [{ 
+            name: isMenqian ? "混一色" : "混一色（喰い下がり）", 
+            fanshu: isMenqian ? 3 : 2 
+         }];
         } else {
-         return [{ name: "清一色", fanshu: isMenqian ? 6 : 5 }];
+         return [{ 
+            name: isMenqian ? "清一色" : "清一色（喰い下がり）", 
+            fanshu: isMenqian ? 6 : 5 
+         }];
         }
     }
     if (!mianzi || mianzi.length === 0) return [];
@@ -467,9 +452,15 @@ function hunyise(mianzi,isMenqian,qiduizi){
     }
 
     if (hasZipai) {
-        return [{ name: "混一色", fanshu: isMenqian ? 3 : 2 }];
-    } else {
-        return [{ name: "清一色", fanshu: isMenqian ? 6 : 5 }];
+        return [{ 
+            name: isMenqian ? "混一色" : "混一色（喰い下がり）", 
+            fanshu: isMenqian ? 3 : 2 
+         }];
+        } else {
+         return [{ 
+            name: isMenqian ? "清一色" : "清一色（喰い下がり）", 
+            fanshu: isMenqian ? 6 : 5 
+         }];
     }
 }
 

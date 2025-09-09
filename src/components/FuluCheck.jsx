@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import './common.css';
 
-export default function FuluCheck({tiles, isMenqian, setIsMenqian, selectedTiles, fuluSets, setFuluSets, isReach, setIsReach}) {
+export default function FuluCheck({isMenqian, setIsMenqian, selectedTiles, fuluSets, setFuluSets}) {
 
    const [selectedFuluTiles, setSelectedFuluTiles] = useState([]);
+   const [lockedTiles, setLockedTiles] = useState([]);
 
   // 鳴き追加ボタン（ポン・チー・カン）
   const addFuluSet = (type) => {
@@ -16,6 +17,9 @@ export default function FuluCheck({tiles, isMenqian, setIsMenqian, selectedTiles
       // 追加
       setFuluSets([...fuluSets, { type, tiles }]);
 
+      // 選択した牌をロック
+      setLockedTiles([...lockedTiles, ...selectedFuluTiles]);
+
       // 選択リセット
       setSelectedFuluTiles([]);
     
@@ -23,17 +27,26 @@ export default function FuluCheck({tiles, isMenqian, setIsMenqian, selectedTiles
 
   //牌選択の挙動
   const toggleFuluTile = (index) => {
-  if (selectedFuluTiles.includes(index)) {
+    if (lockedTiles.includes(index)) return; // 副露確定牌は選べない
+
+    if (selectedFuluTiles.includes(index)) {
     // すでに選択されていたら外す
-    setSelectedFuluTiles(selectedFuluTiles.filter(i => i !== index));
-  } else {
-    // 選択されていなければ追加
-    setSelectedFuluTiles([...selectedFuluTiles, index]);
-  }
-};
+      setSelectedFuluTiles(selectedFuluTiles.filter(i => i !== index));
+    } else {
+      // 選択されていなければ追加
+      setSelectedFuluTiles([...selectedFuluTiles, index]);
+    }
+  };
+
+  //クリアボタン
+  const clearFuluSets = () => {
+    setFuluSets([]);
+    setSelectedFuluTiles([]);
+    setLockedTiles([]); 
+  };
 
   return (
-    <div className="container">
+    <div>
       {/* 門前 or 鳴き */}
       <h2 className="title">門前・副露ありを選択</h2>
       <p className="label"> 暗槓のときは面前を選択してね </p>
@@ -70,9 +83,11 @@ export default function FuluCheck({tiles, isMenqian, setIsMenqian, selectedTiles
                 src={`tiles/${tile}.png`}
                 alt={tile}
                 onClick={() => toggleFuluTile(i)} 
-                className={`radioButtonTileImg ${selectedFuluTiles.includes(i) ? "tileImgSelected" : ""}`}
-                draggable={false}
-             />
+                className={`radioButtonTileImg ${
+                  selectedFuluTiles.includes(i) ? "tileImgSelected" : ""
+                } ${lockedTiles.includes(i) ? "tileImgLocked" : ""}`}
+                draggable={false}               
+              />
             ))}
           </div>
 
@@ -104,7 +119,7 @@ export default function FuluCheck({tiles, isMenqian, setIsMenqian, selectedTiles
           <div className="selected-area-title">
             <h3>鳴きセット一覧</h3>
             <button
-              onClick={() => setFuluSets([])}
+              onClick={clearFuluSets}
               className="clear-button"
             >
               すべてクリア

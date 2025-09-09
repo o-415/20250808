@@ -36,6 +36,11 @@
   border: 3px solid #007bff;
 }
 
+.tileImgLocked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .tiles-list {
   display: flex;
   flex-wrap: wrap;
